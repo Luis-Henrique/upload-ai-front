@@ -4,8 +4,33 @@ import { Separator } from "./components/ui/separator";
 import { Textarea } from "./components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
 import { Slider } from "./components/ui/slider";
+import { VideoInputForm } from "./components/video-input-form";
+import { useState } from "react";
+import { useCompletion } from 'ai/react'
+import { PromptSelect } from "./components/prompt-select";
 
 export function App() {
+  const [videoId, setVideoId] = useState<string | null>(null)
+  const [temperature, setTemperature] = useState(0.5)
+
+  const {
+    input,
+    setInput,
+    handleInputChange,
+    handleSubmit,
+    completion,
+    isLoading
+  } = useCompletion({
+    api: `${import.meta.env.VITE_BASE_URL}/ai/generate`,
+    body: {
+      videoId,
+      temperature
+    },
+    headers: {
+      'Content-type': 'application/json'
+    }
+  })
+  
   return (
   <div className="min-h-screen flex flex-col">
     <div className="px-6 py-3 flex items-center justify-between border-b">
@@ -28,45 +53,22 @@ export function App() {
     <main className="flex-1 p-6 flex gap-6">
       <div className="flex flex-col flex-1 gap-4">
         <div className="grid grid-rows-2 gap-4 flex-1">
-          <Textarea className="resize-none p-5 leading-relaxed" placeholder="Inclua o prompt para a IA..."/>
-          <Textarea className="resize-none p-5 leading-relaxed" placeholder="Resultado gerado pela IA" readOnly/>
+          <Textarea className="resize-none p-5 leading-relaxed" placeholder="Inclua o prompt para a IA..." value={input} onChange={handleInputChange}/>
+          <Textarea className="resize-none p-5 leading-relaxed" placeholder="Resultado gerado pela IA" readOnly value={completion}/>
         </div>
         
         <p>Lembre-se: Você pode utilizar a variável <code className="text-orange-400">{'{transcription}'}</code> no seu prompt para adicionar o conteúdo da transcrição do video selecionado</p>
       </div>
 
       <aside className="w-80 space-y-6">
-        <form className="space-y-6">
-          <label htmlFor="video" className="border flex rounded-md aspect-video cursor-pointer border-dashed text-sm flex-col gap-2 items-center justify-center text-muted-foreground hover:bg-primary/5">
-            <FileVideo className="w-4 h-4"/>
-            Selecione um video
-          </label>
-
-          <input type="file" id="video" accept="video/mp4" className="sr-only"/>
-
-          <Separator />
-
-          <div className="space-y-3">
-            <label htmlFor="transcription_prompt">Prompt de transcrição</label>
-            <Textarea 
-              id="transcription_prompt"
-              className="h-20 leading-relaxed resize-none"
-              placeholder="Inclua palavras-chave mencionadas no vídeo separadas por vírgula (,)"
-            />
-
-            <Button type="submit" className="w-full">
-              Carregar vídeo
-
-              <Upload className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
-        </form>
+        <VideoInputForm onVideoUploaded={setVideoId}/>
 
         <Separator />
 
-        <form className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
             <label>Prompt</label>
+            <PromptSelect onPromptSelected={setInput} />
 
             <Select>
               <SelectTrigger>
@@ -105,6 +107,8 @@ export function App() {
               min={0}
               max={1}
               step={0.1}
+              value={[temperature]}
+              onValueChange={value => setTemperature(value[0])}
             />
             <span className="block text-xs text-muted-foreground italic leading-relaxed">
               Valores mais altos tendem a deixar o resultado mais criativo porém com possíveis erros
@@ -113,7 +117,7 @@ export function App() {
 
           <Separator />
 
-          <Button type="submit" className="w-full">
+          <Button disabled={isLoading} type="submit" className="w-full">
             Executar
             <Wand2 className="h-4 ml-2" />
           </Button>

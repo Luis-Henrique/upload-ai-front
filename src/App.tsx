@@ -21,7 +21,7 @@ export function App() {
     completion,
     isLoading
   } = useCompletion({
-    api: `${import.meta.env.VITE_BASE_URL}/ai/generate`,
+    api: "http://localhost:5001/ai/generate",
     body: {
       videoId,
       temperature
@@ -69,16 +69,6 @@ export function App() {
           <div className="space-y-4">
             <label>Prompt</label>
             <PromptSelect onPromptSelected={setInput} />
-
-            <Select>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um prompt..."/>
-                <SelectContent>
-                  <SelectItem value="title">Titulo do youtube</SelectItem>
-                  <SelectItem value="description">Descrição do youtube</SelectItem>
-                </SelectContent>
-              </SelectTrigger>
-            </Select>
           </div>
 
           <Separator />
